@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>Card Games</title>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+		<style type="text/css">
+			body {margin:0;padding:0;}
+			#canvas {border:1px solid #afafaf;display:block;margin:10% auto 0 auto;}
+		</style>
+
+	</head>
+	<body onload="init()">
+		<canvas id="canvas" width="980" height="500"></canvas>
+		<script type="text/javascript">
+			function init() {
+				var canvas = document.getElementById("canvas");
+				var context = canvas.getContext('2d');
+
+				// Deck
+				var deck = new Image(170,100);
+				deck.src = '/cards/deck.png';
+				deck.onload = function() { context.drawImage(deck,0,492,79,123,0,0,79,123); }
+
+				// Deal button
+				var dealButton = context.beginPath();
+				context.arc(490,250,50,0,2*Math.PI);
+				context.stroke();
+				context.font = "20px Serif";
+				context.color = "#ffffff";
+				context.fill = "#000000";
+				context.fillText("DEAL",465,258);
+
+				// Set a new deal when dealer button is pressd
+				canvas.addEventListener("mouseup",function() {
+					// console.log(event.pageX,event.pageY);
+					var eventx = event.offsetX;
+					var eventy = event.offsetY;
+
+					if ((eventx>440 && eventx<540) && (eventy>200 && eventy<300)) {
+						var cards = setDeck();
+						var shuffledCards = shuffleCards(cards);
+						var lastShuffledCard = shuffledCards[shuffledCards.length-1];
+						// console.log(lastShuffledCard.type,lastShuffledCard.rank,lastShuffledCard.sx,lastShuffledCard.sy); // Gets the last card number
+						context.drawImage(deck,lastShuffledCard.sourcex,lastShuffledCard.sourcey,79,123,0,0,79,123);
+					}
+				},false);
+			}
+
+			function setDeck() {
+				deck = [];
+				for (var card=0;card<52;card++) {
+				    var cardTypes = ["Club","Diamond","Heart","Spade"];
+				    var cardRanks = ["Ace","2","3","4","5","6","7","8","9","10","Jack","Queen","King"];
+					var cardNumber = card + 1;
+					var cardType = Math.floor((cardNumber/13)-0.01);
+				    var cardRank = cardNumber % 13;
+					var sourcex = (cardNumber*79)-(1027*cardType) ? (cardNumber*79)-(1027*cardType) : 0;
+					var sourcey = cardType*123;
+					var cardValue = cardNumber%13==0 ? 13 : cardRank;
+					deck.push({
+						"number": cardNumber, 
+						"type": cardTypes[cardType], 
+						"rank": cardRanks[cardRank], 
+						"sourcex": sourcex, 
+						"sourcey": sourcey, 
+						"value": cardValue
+					});
+					// console.log(cardType,cardRank,cardTypes[cardType],cardRanks[cardRank],sourcex,sourcey,cardValue);
+				}
+				return deck;
+			}
+
+			function shuffleCards(cards) {
+				  var currentIndex = cards.length, temporaryValue, randomIndex ;
+				  // While there remain elements to shuffle...
+				  while (0 !== currentIndex) {
+				    // Pick a remaining element...
+				    randomIndex = Math.floor(Math.random() * currentIndex);
+				    currentIndex -= 1;
+				    // And swap it with the current element.
+				    temporaryValue = cards[currentIndex];
+				    cards[currentIndex] = cards[randomIndex];
+				    cards[randomIndex] = temporaryValue;
+				  }
+				  return cards;
+			}
+		</script>
+	</body>
+
+</html>
