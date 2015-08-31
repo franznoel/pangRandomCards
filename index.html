@@ -5,45 +5,57 @@
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
 		<style type="text/css">
 			body {margin:0;padding:0;}
-			#canvas {border:1px solid #afafaf;display:block;margin:10% auto 0 auto;}
+			#canvas {border:1px solid #afafaf;display:block;margin:2% auto 0 auto;}
 		</style>
-
 	</head>
 	<body onload="init()">
-		<canvas id="canvas" width="980" height="500"></canvas>
+		<canvas id="canvas" width="980" height="700"></canvas>
 		<script type="text/javascript">
 			function init() {
-				var canvas = document.getElementById("canvas");
-				var context = canvas.getContext('2d');
+				var canvas = document.getElementById("canvas"), 
+				context = canvas.getContext('2d'),
+				centerX =  Math.floor(canvas.width/2),
+				centerY =  Math.floor(canvas.height/2);
 
 				// Deck
 				var deck = new Image(170,100);
 				deck.src = '/cards/deck.png';
-				deck.onload = function() { context.drawImage(deck,0,492,79,123,0,0,79,123); }
+				deck.onload = function() { 
+					// context.drawImage(deck,0,492,79,123,0,0,79,123); 
+				}
 
 				// Deal button
 				var dealButton = context.beginPath();
-				context.arc(490,250,50,0,2*Math.PI);
+				context.arc(centerX,centerY,50,0,2*Math.PI);
 				context.stroke();
 				context.font = "20px Serif";
 				context.color = "#ffffff";
 				context.fill = "#000000";
-				context.fillText("DEAL",465,258);
+				context.fillText("DEAL",centerX-25,centerY+8);
 
 				// Set a new deal when dealer button is pressd
 				canvas.addEventListener("mouseup",function() {
-					// console.log(event.pageX,event.pageY);
 					var eventx = event.offsetX;
 					var eventy = event.offsetY;
 
-					if ((eventx>440 && eventx<540) && (eventy>200 && eventy<300)) {
+					if ((eventx>440 && eventx<540) && (eventy>300 && eventy<400)) {
 						var cards = setDeck();
 						var shuffledCards = shuffleCards(cards);
+						var cardsPerPlayer = 13;
+						var numberOfPlayers = 4;
 						var lastShuffledCard = shuffledCards[shuffledCards.length-1];
+						var playerCards = distributeCards(numberOfPlayers,shuffledCards,cardsPerPlayer);
+
+						setGameTable(context,canvas,deck,playerCards);					
+
 						// console.log(lastShuffledCard.type,lastShuffledCard.rank,lastShuffledCard.sx,lastShuffledCard.sy); // Gets the last card number
-						context.drawImage(deck,lastShuffledCard.sourcex,lastShuffledCard.sourcey,79,123,0,0,79,123);
+						// context.drawImage(deck,lastShuffledCard.sourceX,lastShuffledCard.sourceY,79,123,0,0,79,123);
+
+						// Player 1
+
 					}
 				},false);
+				// canvas.addEventListener("mousemove",function(e) { console.log(e.offsetX,e.offsetY); },false);
 			}
 
 			function setDeck() {
@@ -61,8 +73,8 @@
 						"number": cardNumber, 
 						"type": cardTypes[cardType], 
 						"rank": cardRanks[cardRank], 
-						"sourcex": sourcex, 
-						"sourcey": sourcey, 
+						"sourceX": sourcex, 
+						"sourceY": sourcey, 
 						"value": cardValue
 					});
 					// console.log(cardType,cardRank,cardTypes[cardType],cardRanks[cardRank],sourcex,sourcey,cardValue);
@@ -84,6 +96,153 @@
 				  }
 				  return cards;
 			}
+
+			function distributeCards(numberOfPlayers,deck,cardsPerPlayer) {
+				cardsPerPlayer = deck.length/numberOfPlayers;
+				// console.log(cardsPerPlayer)
+				playerCards = [];
+				for (var i=0;i<numberOfPlayers;i++) {
+					playerCards[i] = []
+					for(var c=0;c<cardsPerPlayer;c++) {
+						playerCards[i][c] = deck.pop();
+					}
+				}
+				return playerCards;
+			}
+
+			function setGameTable(context,canvas,deck,playerCards) {
+				var centerX = Math.floor(canvas.width/2),
+				centerY = Math.floor(canvas.height/2),
+				bottomY = canvas.height - 150, // player1
+				rightX = canvas.width - 120, // player2
+				topY = 30, // player3
+				leftX = 50; // player4
+
+				// console.log(topY,rightX,bottomY,leftX);
+				// var player1Start = ((13/2)*30)+centerX-79,
+				var player1Start = (centerX+((30*13)+79)/2)-79,
+				// player2Start = (centerY+((30*13)+123)/2)-123,
+				player2Start = (centerY-30*13/2)-30,
+				player3Start = (centerX+((30*13)+79)/2)-79,
+				// player4Start = (centerY+((30*13)+123)/2)-123;
+				player4Start = (centerY+((30*13)+123)/2)-123;
+
+				var startBottom, startRight, startTop, startLeft;
+				// Set the starting point of players
+				for (var i=0;i<playerCards.length;i++) {
+					switch(i) {
+						case 0: startBottom = centerX + Math.floor(playerCards[i].length/2)*15;break;
+						case 1: startRight = centerY + Math.floor(playerCards[i].length/2)*15;break;
+						case 2: startTop = centerX + Math.floor(playerCards[i].length/2)*15;break;
+						case 3: startLeft = centerY + Math.floor(playerCards[i].length/2)*15;break;
+					}
+					// console.log(startBottom,startRight,startTop,startLeft);
+				}
+
+
+				// Display player1 cards
+				context.drawImage(deck,playerCards[0][0].sourceX,playerCards[0][0].sourceY,79,123,player1Start,bottomY,79,123);
+				context.drawImage(deck,playerCards[0][1].sourceX,playerCards[0][1].sourceY,79,123,player1Start-30,bottomY,79,123);
+				context.drawImage(deck,playerCards[0][2].sourceX,playerCards[0][2].sourceY,79,123,player1Start-60,bottomY,79,123);
+				context.drawImage(deck,playerCards[0][3].sourceX,playerCards[0][3].sourceY,79,123,player1Start-90,bottomY,79,123);
+				context.drawImage(deck,playerCards[0][4].sourceX,playerCards[0][4].sourceY,79,123,player1Start-120,bottomY,79,123);
+				context.drawImage(deck,playerCards[0][5].sourceX,playerCards[0][5].sourceY,79,123,player1Start-150,bottomY,79,123);
+				context.drawImage(deck,playerCards[0][6].sourceX,playerCards[0][6].sourceY,79,123,player1Start-180,bottomY,79,123);
+				context.drawImage(deck,playerCards[0][7].sourceX,playerCards[0][7].sourceY,79,123,player1Start-210,bottomY,79,123);
+				context.drawImage(deck,playerCards[0][8].sourceX,playerCards[0][8].sourceY,79,123,player1Start-240,bottomY,79,123);
+				context.drawImage(deck,playerCards[0][9].sourceX,playerCards[0][9].sourceY,79,123,player1Start-270,bottomY,79,123);
+				context.drawImage(deck,playerCards[0][10].sourceX,playerCards[0][10].sourceY,79,123,player1Start-300,bottomY,79,123);
+				context.drawImage(deck,playerCards[0][11].sourceX,playerCards[0][11].sourceY,79,123,player1Start-330,bottomY,79,123);
+				context.drawImage(deck,playerCards[0][12].sourceX,playerCards[0][12].sourceY,79,123,player1Start-360,bottomY,79,123);
+
+				// Display player2 cards
+				context.drawImage(deck,playerCards[0][0].sourceX,playerCards[0][0].sourceY,79,123,rightX,player2Start,79,123);
+				context.drawImage(deck,playerCards[0][1].sourceX,playerCards[0][1].sourceY,79,123,rightX,player2Start+30,79,123);
+				context.drawImage(deck,playerCards[0][2].sourceX,playerCards[0][2].sourceY,79,123,rightX,player2Start+60,79,123);
+				context.drawImage(deck,playerCards[0][3].sourceX,playerCards[0][3].sourceY,79,123,rightX,player2Start+90,79,123);
+				context.drawImage(deck,playerCards[0][4].sourceX,playerCards[0][4].sourceY,79,123,rightX,player2Start+120,79,123);
+				context.drawImage(deck,playerCards[0][5].sourceX,playerCards[0][5].sourceY,79,123,rightX,player2Start+150,79,123);
+				context.drawImage(deck,playerCards[0][6].sourceX,playerCards[0][6].sourceY,79,123,rightX,player2Start+180,79,123);
+				context.drawImage(deck,playerCards[0][7].sourceX,playerCards[0][7].sourceY,79,123,rightX,player2Start+210,79,123);
+				context.drawImage(deck,playerCards[0][8].sourceX,playerCards[0][8].sourceY,79,123,rightX,player2Start+240,79,123);
+				context.drawImage(deck,playerCards[0][9].sourceX,playerCards[0][9].sourceY,79,123,rightX,player2Start+270,79,123);
+				context.drawImage(deck,playerCards[0][10].sourceX,playerCards[0][10].sourceY,79,123,rightX,player2Start+300,79,123);
+				context.drawImage(deck,playerCards[0][11].sourceX,playerCards[0][11].sourceY,79,123,rightX,player2Start+330,79,123);
+				context.drawImage(deck,playerCards[0][12].sourceX,playerCards[0][12].sourceY,79,123,rightX,player2Start+360,79,123);
+
+				// Display player3 cards
+				context.drawImage(deck,playerCards[0][0].sourceX,playerCards[0][0].sourceY,79,123,player3Start,topY,79,123);
+				context.drawImage(deck,playerCards[0][1].sourceX,playerCards[0][1].sourceY,79,123,player3Start-30,topY,79,123);
+				context.drawImage(deck,playerCards[0][2].sourceX,playerCards[0][2].sourceY,79,123,player3Start-60,topY,79,123);
+				context.drawImage(deck,playerCards[0][3].sourceX,playerCards[0][3].sourceY,79,123,player3Start-90,topY,79,123);
+				context.drawImage(deck,playerCards[0][4].sourceX,playerCards[0][4].sourceY,79,123,player3Start-120,topY,79,123);
+				context.drawImage(deck,playerCards[0][5].sourceX,playerCards[0][5].sourceY,79,123,player3Start-150,topY,79,123);
+				context.drawImage(deck,playerCards[0][6].sourceX,playerCards[0][6].sourceY,79,123,player3Start-180,topY,79,123);
+				context.drawImage(deck,playerCards[0][7].sourceX,playerCards[0][7].sourceY,79,123,player3Start-210,topY,79,123);
+				context.drawImage(deck,playerCards[0][8].sourceX,playerCards[0][8].sourceY,79,123,player3Start-240,topY,79,123);
+				context.drawImage(deck,playerCards[0][9].sourceX,playerCards[0][9].sourceY,79,123,player3Start-270,topY,79,123);
+				context.drawImage(deck,playerCards[0][10].sourceX,playerCards[0][10].sourceY,79,123,player3Start-300,topY,79,123);
+				context.drawImage(deck,playerCards[0][11].sourceX,playerCards[0][11].sourceY,79,123,player3Start-330,topY,79,123);
+				context.drawImage(deck,playerCards[0][12].sourceX,playerCards[0][12].sourceY,79,123,player3Start-360,topY,79,123);
+
+				// Display player4 cards
+				context.drawImage(deck,playerCards[0][0].sourceX,playerCards[0][0].sourceY,79,123,leftX,player4Start,79,123);
+				context.drawImage(deck,playerCards[0][1].sourceX,playerCards[0][1].sourceY,79,123,leftX,player4Start-30,79,123);
+				context.drawImage(deck,playerCards[0][2].sourceX,playerCards[0][2].sourceY,79,123,leftX,player4Start-60,79,123);
+				context.drawImage(deck,playerCards[0][3].sourceX,playerCards[0][3].sourceY,79,123,leftX,player4Start-90,79,123);
+				context.drawImage(deck,playerCards[0][4].sourceX,playerCards[0][4].sourceY,79,123,leftX,player4Start-120,79,123);
+				context.drawImage(deck,playerCards[0][5].sourceX,playerCards[0][5].sourceY,79,123,leftX,player4Start-150,79,123);
+				context.drawImage(deck,playerCards[0][6].sourceX,playerCards[0][6].sourceY,79,123,leftX,player4Start-180,79,123);
+				context.drawImage(deck,playerCards[0][7].sourceX,playerCards[0][7].sourceY,79,123,leftX,player4Start-210,79,123);
+				context.drawImage(deck,playerCards[0][8].sourceX,playerCards[0][8].sourceY,79,123,leftX,player4Start-240,79,123);
+				context.drawImage(deck,playerCards[0][9].sourceX,playerCards[0][9].sourceY,79,123,leftX,player4Start-270,79,123);
+				context.drawImage(deck,playerCards[0][10].sourceX,playerCards[0][10].sourceY,79,123,leftX,player4Start-300,79,123);
+				context.drawImage(deck,playerCards[0][11].sourceX,playerCards[0][11].sourceY,79,123,leftX,player4Start-330,79,123);
+				context.drawImage(deck,playerCards[0][12].sourceX,playerCards[0][12].sourceY,79,123,leftX,player4Start-360,79,123);
+
+
+
+				context.fillStyle = "blue";
+				cardLength = 13;
+				console.log(player1Start);
+				context.fillRect(player1Start,bottomY,5,5);// Player 1
+				context.fillRect(rightX,player2Start,5,5);// Player 2
+				context.fillRect(player3Start,topY,5,5);// Player 3
+				context.fillRect(leftX,player4start,5,5);// Player 4
+
+
+				// console.log(playerCards[0][12].type,playerCards[0][12].rank,playerCards[0][0].sourceX,playerCards[0][0].sourceY,79,123,250,bottomY,79,123);
+
+				// for (var p=0;p<playerCards.length;p++) {
+				// 	for (var c=0;c<playerCards[p].length;c++) {
+				// 		// switch(c) {
+				// 		// 	case 0:
+				// 				// context.drawImage(deck,playerCards[p][c].sourceX,playerCards[p][c].sourceY,79,123,580,bottomY,79,123);
+				// 				// console.log(i,p,c,playerCards[p][c].sourceX,playerCards[p][c].sourceY,79,123,startBottom,bottomY,79,123);
+				// 				// break;
+				// 			// case 1:
+				// 			// 	context.drawImage(deck,playerCards[p][c].sourceX,playerCards[p][c].sourceY,79,123,rightX,startRight+(c*15),79,123);
+				// 			// 	console.log(i,p,c,playerCards[p][c].sourceX,playerCards[p][c].sourceY,79,123,rightX,startRight+(c*15),79,123);
+				// 			// 	break; 
+				// 			// case 2:
+				// 			// 	context.drawImage(deck,playerCards[p][c].sourceX,playerCards[p][c].sourceY,79,123,startTop+(c*15),topY,79,123);
+				// 			// 	console.log(i,p,c,playerCards[p][c].sourceX,playerCards[p][c].sourceY,79,123,startTop+(c*15),topY,79,123);
+				// 			// 	break; 
+				// 			// case 3:
+				// 			// 	context.drawImage(deck,playerCards[p][c].sourceX,playerCards[p][c].sourceY,79,123,leftX,startLeft+(c*15),79,123);
+				// 			// 	console.log(i,p,c,playerCards[p][c].sourceX,playerCards[p][c].sourceY,79,123,leftX,startLeft+(c*15),79,123);
+				// 				// break; 
+				// 		}
+				// 	}
+				// }
+
+
+
+				// console.log(centerX,centerY,topY,rightX,bottomY,leftX);
+			}
+
+
+
 		</script>
 	</body>
 
